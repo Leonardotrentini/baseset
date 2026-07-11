@@ -8,41 +8,12 @@
 <meta name="theme-color" content="#201E1F">
 <link rel="icon" href="/logo.png" type="image/png">
 <link rel="apple-touch-icon" href="/logo.png">
-<link rel="preload" href="/logo.png" as="image" type="image/png">
+<link rel="preload" href="/logo.webp" as="image" type="image/webp">
 <link rel="preload" href="/fonts/JTUSjIg69CK48gW7PXoo9Wlhyw.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/fonts/dm-sans.css" media="print" onload="this.media='all';document.body.classList.add('fonts-ready')">
+<noscript><link rel="stylesheet" href="/fonts/dm-sans.css"></noscript>
 <style>
-@font-face {
-  font-family: 'Bebas Neue';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/fonts/JTUSjIg69CK48gW7PXoo9Wlhyw.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'DM Sans';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/fonts/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K4.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'DM Sans';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('/fonts/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K4.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'DM Sans';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/fonts/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K4.woff2') format('woff2');
-}
-
+@font-face{font-family:'Bebas Neue';font-style:normal;font-weight:400;font-display:optional;src:url('/fonts/JTUSjIg69CK48gW7PXoo9Wlhyw.woff2') format('woff2')}
   :root{
     --bg: #201E1F;
     --orange: #F27D14;
@@ -60,7 +31,7 @@
   body{
     background:var(--bg);
     color:var(--white);
-    font-family:'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-family:system-ui,-apple-system,'Segoe UI',sans-serif;
     height:100dvh;
     display:flex;
     flex-direction:column;
@@ -215,7 +186,10 @@
 <noscript><img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=1566611764859334&ev=PageView&noscript=1"/></noscript>
 
 <header>
-  <img class="logo" src="/logo.png" width="38" height="38" alt="Logo BaseSet Atacado" decoding="async" fetchpriority="high">
+  <picture>
+    <source srcset="/logo.webp" type="image/webp">
+    <img class="logo" src="/logo.png" width="38" height="38" alt="Logo BaseSet Atacado" decoding="async" fetchpriority="high">
+  </picture>
 </header>
 
 <main>
@@ -252,32 +226,79 @@
 <footer>BaseSet Atacado — A base do seu negócio</footer>
 
 <script defer>
-!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];}(window,document,'script');
-function loadMetaPixel(){var t=document.createElement('script');t.async=true;t.src='https://connect.facebook.net/en_US/fbevents.js';document.head.appendChild(t);fbq('init','1566611764859334');fbq('track','PageView');}
-if('requestIdleCallback' in window){requestIdleCallback(loadMetaPixel,{timeout:2500});}else{window.addEventListener('load',loadMetaPixel);}
-</script>
-<script defer>
 (function () {
+  var PIXEL_ID = '1566611764859334';
+  var WHATSAPP_NUMBER = '5547996747378';
+  var BASE_MESSAGE = 'Olá, vim do site e quero comprar no atacado!';
+  var pageSent = false;
+  var pixelLoaded = false;
+
   function getCookie(name) {
-    const match = document.cookie.match('(^|;)\s*' + name + '\s*=\s*([^;]+)');
+    var match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
     return match ? decodeURIComponent(match.pop()) : '';
   }
-  function generateCid() {
-    return Math.random().toString(36).substring(2, 8);
+
+  function generateId(prefix) {
+    return prefix + Math.random().toString(36).substring(2, 10);
   }
 
-  const WHATSAPP_NUMBER = '5547996747378';
-  const BASE_MESSAGE = 'Olá, vim do site e quero comprar no atacado!';
+  function sendMetaEvent(payload) {
+    fetch('/api/meta-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true
+    }).catch(function () {});
+  }
 
-  const btn = document.getElementById('cta-whatsapp');
+  function sendPageView() {
+    if (pageSent) return;
+    pageSent = true;
+    sendMetaEvent({
+      event_name: 'PageView',
+      event_id: generateId('pv_'),
+      event_source_url: location.href,
+      fbc: getCookie('_fbc'),
+      fbp: getCookie('_fbp'),
+      user_agent: navigator.userAgent
+    });
+  }
 
-  btn.addEventListener('click', function (e) {
+  function loadMetaPixel() {
+    if (pixelLoaded || window.fbq) return;
+    pixelLoaded = true;
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];}(window,document,'script');
+    var t = document.createElement('script');
+    t.async = true;
+    t.src = 'https://connect.facebook.net/en_US/fbevents.js';
+    t.onload = function () {
+      fbq('init', PIXEL_ID);
+      fbq('track', 'PageView');
+    };
+    document.head.appendChild(t);
+  }
+
+  function onFirstInteraction() {
+    loadMetaPixel();
+  }
+
+  ['pointerdown', 'keydown', 'touchstart'].forEach(function (ev) {
+    document.addEventListener(ev, onFirstInteraction, { once: true, passive: true });
+  });
+
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(sendPageView, { timeout: 5000 });
+  } else {
+    window.addEventListener('load', function () { setTimeout(sendPageView, 1500); });
+  }
+
+  document.getElementById('cta-whatsapp').addEventListener('click', function (e) {
     e.preventDefault();
+    loadMetaPixel();
 
-    const cid = generateCid();
-    const params = new URLSearchParams(window.location.search);
-
-    const trackingData = {
+    var cid = generateId('');
+    var params = new URLSearchParams(window.location.search);
+    var trackingData = {
       cid: cid,
       fbc: getCookie('_fbc'),
       fbp: getCookie('_fbp'),
@@ -298,21 +319,16 @@ if('requestIdleCallback' in window){requestIdleCallback(loadMetaPixel,{timeout:2
       fbq('track', 'Lead', {}, { eventID: cid });
     }
 
-    fetch('/api/meta-event', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        event_name: 'Lead',
-        event_id: cid,
-        event_source_url: trackingData.landing_url,
-        fbc: trackingData.fbc,
-        fbp: trackingData.fbp,
-        user_agent: trackingData.user_agent
-      }),
-      keepalive: true
-    }).catch(function () {});
+    sendMetaEvent({
+      event_name: 'Lead',
+      event_id: cid,
+      event_source_url: trackingData.landing_url,
+      fbc: trackingData.fbc,
+      fbp: trackingData.fbp,
+      user_agent: trackingData.user_agent
+    });
 
-    const msg = encodeURIComponent(BASE_MESSAGE + ' (cód: ' + cid + ')');
+    var msg = encodeURIComponent(BASE_MESSAGE + ' (cód: ' + cid + ')');
     window.location.href = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + msg;
   });
 })();
